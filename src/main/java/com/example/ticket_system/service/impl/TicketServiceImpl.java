@@ -2,52 +2,60 @@ package com.example.ticket_system.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.ticket_system.dto.TicketDTO;
+import com.example.ticket_system.mapper.TicketMapper;
+import com.example.ticket_system.mapper.UserMapper;
 import com.example.ticket_system.model.Ticket;
 import com.example.ticket_system.repository.TicketRepository;
 import com.example.ticket_system.service.TicketService;
 
 @Service
-public class TicketServiceImpl implements TicketService{
+public class TicketServiceImpl implements TicketService {
 
-	
 	@Autowired
 	private TicketRepository ticketRepository;
-	
+
+	@Autowired
+	private UserServiceImpl userServiceImpl;
+
 	@Override
-	public Ticket createTicket(Ticket ticket) {
+	public TicketDTO createTicket(TicketDTO ticketDTO) {
+		Ticket ticket = ticketRepository.save(TicketMapper.toEntity(ticketDTO,
+				UserMapper.toEntity(userServiceImpl.getUserById(ticketDTO.getAssignedToUserId()))));
+		return TicketMapper.toDTO(ticket);
+	}
+
+	@Override
+	public List<TicketDTO> getAllTickets() {
 		// TODO Auto-generated method stub
-		return ticketRepository.save(ticket);
+		return ticketRepository.findAll().stream().map(t ->TicketMapper.toDTO(t) ).collect(Collectors.toList());
 	}
 
 	@Override
-	public List<Ticket> getAllTickets() {
-		// TODO Auto-generated method stub
-		return ticketRepository.findAll();
+	public TicketDTO getTicketById(Long id) {
+		 Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+		 return TicketMapper.toDTO(ticket);
 	}
 
 	@Override
-	public Ticket getTicketById(Long id) {
-	    return ticketRepository.findById(id).orElseThrow(() ->
-	        new RuntimeException("Ticket not found with id: " + id));
-	}
+	public TicketDTO updateTicket(Long id, TicketDTO updatedTicket) {
+		Ticket existingTicket = ticketRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
 
-	@Override
-	public Ticket updateTicket(Long id, Ticket updatedTicket) {
-	    Ticket existingTicket = ticketRepository.findById(id)
-	            .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+		existingTicket.setTitle(updatedTicket.getTitle());
+		existingTicket.setDescription(updatedTicket.getDescription());
+		existingTicket.setPriority(updatedTicket.getPriority());
+		existingTicket.setStatus(updatedTicket.getStatus());
+		existingTicket.setUpdatedAt(LocalDateTime.now()); // Auto-set updated time
+		existingTicket.setAssignedTo(UserMapper.toEntity(userServiceImpl.getUserById(updatedTicket.getAssignedToUserId())));
 
-	    existingTicket.setTitle(updatedTicket.getTitle());
-	    existingTicket.setDescription(updatedTicket.getDescription());
-	    existingTicket.setPriority(updatedTicket.getPriority());
-	    existingTicket.setStatus(updatedTicket.getStatus());
-	    existingTicket.setUpdatedAt(LocalDateTime.now());  // Auto-set updated time
-	    existingTicket.setAssignedTo(updatedTicket.getAssignedTo());
-
-	    return ticketRepository.save(existingTicket);
+		Ticket ticket = ticketRepository.save(existingTicket);
+		return TicketMapper.toDTO(ticket);
 	}
 
 	@Override
