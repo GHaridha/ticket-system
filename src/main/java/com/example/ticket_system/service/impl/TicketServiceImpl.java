@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.ticket_system.dto.TicketDTO;
+import com.example.ticket_system.exception.ResourceNotFoundException;
 import com.example.ticket_system.mapper.TicketMapper;
 import com.example.ticket_system.mapper.UserMapper;
 import com.example.ticket_system.model.Ticket;
@@ -38,14 +39,14 @@ public class TicketServiceImpl implements TicketService {
 
 	@Override
 	public TicketDTO getTicketById(Long id) {
-		 Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+		 Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Ticket not found with id: " + id));
 		 return TicketMapper.toDTO(ticket);
 	}
 
 	@Override
 	public TicketDTO updateTicket(Long id, TicketDTO updatedTicket) {
 		Ticket existingTicket = ticketRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+				.orElseThrow(() -> new ResourceNotFoundException("Ticket not found with id: " + id));
 
 		existingTicket.setTitle(updatedTicket.getTitle());
 		existingTicket.setDescription(updatedTicket.getDescription());

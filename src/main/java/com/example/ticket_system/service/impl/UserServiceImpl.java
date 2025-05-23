@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.ticket_system.dto.UserDTO;
+import com.example.ticket_system.exception.ResourceNotFoundException;
 import com.example.ticket_system.mapper.UserMapper;
 import com.example.ticket_system.model.User;
 import com.example.ticket_system.repository.UserRepository;
@@ -26,7 +27,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public UserDTO getUserById(Long id) {
-		User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+		User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 		return UserMapper.toDTO(user);
 	}
 
@@ -39,7 +40,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserDTO updateUser(Long id, UserDTO updatedUser) {
 		User existingUser = userRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+				.orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
 		existingUser.setUsername(updatedUser.getUsername());
 		existingUser.setRole(updatedUser.getRole());
